@@ -7,7 +7,6 @@ env:
   QT_VERSION: qt51510
   QT_VERSION_PRETTY: "5.15.10"
 
-
 jobs:
   android:
     runs-on: ubuntu-latest
@@ -29,6 +28,7 @@ jobs:
         run: |
           .circleci/prepare.sh
           curl -L ${TOOLS_URL}/openssl-111t_android.tar.xz | tar xJf - -C /opt/
+
       - name: Build
         env:
           BUILDOPTS: ANDROID_ABIS=${{ matrix.abi }} FORCE_QT_PNG=1
@@ -39,7 +39,6 @@ jobs:
         run: .circleci/build.sh
 
       - name: Package (debug)
-        if: (github.event_name != 'push' && github.event_name != 'workflow_dispatch') || github.ref != 'refs/heads/master'
         env:
           ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
           ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
@@ -50,25 +49,14 @@ jobs:
           --output ${PWD}/installdir
           --android-platform android-30
           --gradle
+
       - name: Package (debug), stage
-        if: (github.event_name != 'push' && github.event_name != 'workflow_dispatch') || github.ref != 'refs/heads/master'
         run: cp
           installdir/build/outputs/apk/debug/installdir-debug.apk
           dist/pegasus-fe_$(git describe --always)_${{ matrix.name }}.apk
-
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
           path: dist
-
-      - name: Deploy
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          external_repository: mmatyas/pegasus-deploy-staging
-          personal_token: ${{ secrets.PEGASUS_GHACTIONS_TOKEN }}
-          publish_branch: continuous-${{ matrix.name }}
-          publish_dir: ./dist
-          force_orphan: true
