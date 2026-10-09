@@ -1,7 +1,7 @@
 TARGET = pegasus-fe
 CONFIG += c++11 warn_on exceptions_off rtti_off
 
-SOURCES += main.cpp
+SOURCES += main.cpp jni_fallback.cpp
 DEFINES *= $${COMMON_DEFINES}
 
 RESOURCES += "$${TOP_SRCDIR}/assets/assets.qrc"

@@ -1,17 +1,15 @@
 <?xml version="1.0"?>
 <manifest
-    package="org.pegasus_frontend.android"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:versionName="@GIT_REVISION@"
-    android:versionCode="@GIT_COMMIT_CNT@"
+    android:versionName="alpha16-110-g8845bc37-dirty"
+    android:versionCode="1973"
     android:installLocation="auto">
     <application
         android:hardwareAccelerated="true"
-        android:name="org.qtproject.qt5.android.bindings.QtApplication"
+        android:name="org.qtproject.qt5.android.bindings.PegasusApplication"
         android:label="Pegasus"
         android:icon="@mipmap/icon"
         android:banner="@mipmap/banner"
-        android:extractNativeLibs="true"
         android:requestLegacyExternalStorage="true">
         <activity
             android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
@@ -34,17 +32,17 @@
             <!-- Application arguments -->
 
             <!-- Qt specific fields -->
-            <meta-data android:name="android.app.lib_name" android:value="-- %%INSERT_APP_LIB_NAME%% --" />
+            <meta-data android:name="android.app.lib_name" android:value="pegasus-fe" />
             <meta-data android:name="android.app.qt_sources_resource_id" android:resource="@array/qt_sources" />
             <meta-data android:name="android.app.repository" android:value="default" />
             <meta-data android:name="android.app.qt_libs_resource_id" android:resource="@array/qt_libs" />
             <meta-data android:name="android.app.bundled_libs_resource_id" android:resource="@array/bundled_libs" />
-            <meta-data android:name="android.app.bundle_local_qt_libs" android:value="-- %%BUNDLE_LOCAL_QT_LIBS%% --" />
-            <meta-data android:name="android.app.use_local_qt_libs" android:value="-- %%USE_LOCAL_QT_LIBS%% --" />
+            <meta-data android:name="android.app.bundle_local_qt_libs" android:value="1" />
+            <meta-data android:name="android.app.use_local_qt_libs" android:value="1" />
             <meta-data android:name="android.app.libs_prefix" android:value="/data/local/tmp/qt/" />
             <meta-data android:name="android.app.load_local_libs_resource_id" android:resource="@array/load_local_libs" />
-            <meta-data android:name="android.app.load_local_jars" android:value="-- %%INSERT_LOCAL_JARS%% --" />
-            <meta-data android:name="android.app.static_init_classes" android:value="-- %%INSERT_INIT_CLASSES%% --" />
+            <meta-data android:name="android.app.load_local_jars" android:value="jar/QtAndroid.jar:jar/QtAndroidBearer.jar:jar/QtAndroidExtras.jar:jar/QtAndroidGamepad.jar:jar/QtMultimedia.jar" />
+            <meta-data android:name="android.app.static_init_classes" android:value="org.qtproject.qt5.android.multimedia.QtMultimediaUtils" />
 
             <!-- Qt specific settings -->
             <meta-data android:name="android.app.extract_android_style" android:value="none" />
@@ -87,7 +85,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <uses-feature android:name="android.hardware.gamepad" android:required="false" />

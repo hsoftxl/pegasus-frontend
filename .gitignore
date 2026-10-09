@@ -1,10 +1,54 @@
-# ignore build dir
+# ============================================================
+# Pegasus Frontend — Android 构建链忽略规则
+# ============================================================
+
+# ---------- macOS 系统文件 ----------
+.DS_Store
+
+# ---------- IDE / 编辑器 ----------
+*.pro.user
+*.kdev4
+*.workspace
+.idea
+*.iml
+.settings/
+
+# ---------- qmake 生成 ----------
+Makefile
+.qmake.stash
+.qmake.cache
+*.qmlc
+*.jsc
+*.autosave
+*_qmlcache.qrc
+
+# ---------- make 构建产物（NDK 交叉编译） ----------
+arm64-v8a/
+*.o
+*.a
+*.so
+
+# ---------- androiddeployqt / Qt Android 部署产物 ----------
+installdir/
+src/app/android/
+src/app/android-pegasus-fe-deployment-settings.json
+src/app/platform/android/.gradle/
+src/app/platform/android/gradle/
+src/app/platform/android/gradlew
+src/app/platform/android/gradlew.bat
+src/app/platform/android/local.properties
+src/app/platform/android/res/values/libs.xml
+src/app/platform/android/assets/android_rcc_bundle.rcc
+src/app/platform/android/libs/
+
+# ---------- 发布 APK ----------
+*.apk
+
+# ---------- 通用构建目录 ----------
 build*/
 
-# ignore all dotfiles
-./.*
-
-# except these
+# ---------- 所有 dotfile，以下为白名单 ----------
+.*
 !.gitignore
 !.qmake.conf
 !.appveyor.yml
@@ -12,12 +56,4 @@ build*/
 !.travis/
 !.github/
 
-# ignore IDE project files
-*.pro.user
-*.kdev4
-*.workspace
-
-# ignore Qt generated files
-*.qmlc
-*.jsc
-*.autosave
+*.jks

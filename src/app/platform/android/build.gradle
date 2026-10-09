@@ -1,24 +1,28 @@
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.2'
+        classpath 'com.android.tools.build:gradle:9.4.1'
     }
 }
 
 repositories {
     google()
-    jcenter()
+    mavenCentral()
 }
 
 apply plugin: 'com.android.application'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
-    implementation "androidx.core:core:1.6.0"
+    // androidx.core 传递引入 profileinstaller，其 baseline.prof 在 Android 15+
+    // 设备上安装校验失败（INSTALL_BASELINE_PROFILE_FAILED），显式排除。
+    implementation("androidx.core:core:1.19.0") {
+        exclude group: 'androidx.profileinstaller', module: 'profileinstaller'
+    }
 }
 
 android {
@@ -35,12 +39,25 @@ android {
      * Changing them manually might break the compilation!
      *******************************************************/
 
+    namespace 'org.pegasus_frontend.android'
+
     compileSdkVersion androidCompileSdkVersion.toInteger()
     buildToolsVersion androidBuildToolsVersion
     ndkVersion androidNdkVersion
 
-    // Extract native libraries from the APK
-    packagingOptions.jniLibs.useLegacyPackaging true
+    // 16KB page size：.so 必须未压缩存储（uncompressed）+ 0x4000 ELF 对齐。
+    // useLegacyPackaging=true 让设备把 .so 解压到真实目录（extractNativeLibs=true），
+    // Qt 的 nativeLibraryDir 才能解析成功；noCompress 保证 APK 内 .so 仍为 STORED 未压缩。
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+        resources {
+            // 不打包任何 baseline profile：Qt 应用无 Java 字节码可被 profile 优化，
+            // 且 Android 15+ 安装时会对 baseline.prof 做 dex 校验导致 INSTALL_BASELINE_PROFILE_FAILED
+            excludes += ['assets/dexopt/baseline.prof', 'assets/dexopt/baseline.profm']
+        }
+    }
 
     sourceSets {
         main {
@@ -64,18 +81,49 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    lintOptions {
+    lint {
         abortOnError false
     }
 
     // Do not compress Qt binary resources file
-    aaptOptions {
-        noCompress 'rcc'
-    }
 
     defaultConfig {
-        resConfig "en"
+        resourceConfigurations += ['en']
         minSdkVersion = qtMinSdkVersion
         targetSdkVersion = qtTargetSdkVersion
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("/Users/mac1/projects/pegasus-frontend/.github/workflows/sign_xl.jks")
+            storePassword "xielei987xl"
+            keyAlias "sign_xl"
+            keyPassword "xielei987xl"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            // AGP 9 默认给 release 编译 baseline profile（compileReleaseArtProfile），
+            // 打包进 assets/dexopt/baseline.prof。Android 15+ 安装时校验 profile 与 dex
+            // 不匹配会报 INSTALL_BASELINE_PROFILE_FAILED，Qt 应用无需此优化，整体关闭。
+            optimization {
+                enable = false
+            }
+        }
+    }
+
+    // 兜底：无论 DSL 开关是否生效，禁用 baseline profile 的编译与合并任务，
+    // 确保 APK 不再携带 assets/dexopt/*.prof
+    tasks.configureEach {
+        if (name.endsWith('ArtProfile') || name.endsWith('StartupProfile')) {
+            enabled = false
+        }
+    }
+    androidResources {
+        // rcc 资源与全部 .so 必须未压缩（16KB page size 要求 .so STORED + 0x4000 对齐）
+        noCompress += ['rcc', '**/*.so']
     }
 }

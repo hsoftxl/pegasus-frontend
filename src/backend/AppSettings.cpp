@@ -65,7 +65,7 @@ HashMap<KeyEvent, QVector<QKeySequence>, EnumHash> default_keymap()
         { KeyEvent::UP, { Qt::Key_Up }},
         { KeyEvent::DOWN, { Qt::Key_Down }},
         { KeyEvent::ACCEPT, { Qt::Key_Return, Qt::Key_Enter, GamepadKeyId::A }},
-        { KeyEvent::CANCEL, { Qt::Key_Escape, Qt::Key_Backspace, GamepadKeyId::B }},
+        { KeyEvent::CANCEL, { Qt::Key_Escape, Qt::Key_Backspace, Qt::Key_Back, GamepadKeyId::B }},
         { KeyEvent::DETAILS, { Qt::Key_I, GamepadKeyId::X }},
         { KeyEvent::FILTERS, { Qt::Key_F, GamepadKeyId::Y }},
         { KeyEvent::NEXT_PAGE, { Qt::Key_E, Qt::Key_D, GamepadKeyId::R1 }},
@@ -113,6 +113,7 @@ std::vector<std::unique_ptr<providers::Provider>> create_providers()
 #endif
 #ifdef WITH_COMPAT_ANDROIDAPPS
         MKENTRY(android::AndroidAppsProvider)
+        out.back()->setEnabled(false);
 #endif
 #ifdef WITH_COMPAT_LAUNCHBOX
         MKENTRY(launchbox::LaunchboxProvider)

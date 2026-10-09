@@ -18,6 +18,7 @@
 #include "AndroidHelpers.h"
 
 #include <QDir>
+#include <QEventLoop>
 #include <QHash>  // Required for PermissionResultMap
 #include <QStandardPaths>
 #include <QtAndroid>
@@ -78,24 +79,32 @@ QStringList granted_paths()
     return query_string_array("grantedPaths");
 }
 
-void request_saf_permission(const std::function<void()>& cb_success)
+void request_saf_permission(const std::function<void()>& cb_success, const std::function<void()>& cb_done)
 {
     constexpr int REQ_OPEN_DOCUMENT_TREE = 0x1;
 
-    const auto activity_cb = [&cb_success](int requestCode, int resultCode, const QAndroidJniObject& data) {
+    const auto activity_cb = [&cb_success, &cb_done](int requestCode, int resultCode, const QAndroidJniObject& data) {
         const jint RESULT_OK = QAndroidJniObject::getStaticField<jint>("android/app/Activity", "RESULT_OK");
-        if (requestCode != REQ_OPEN_DOCUMENT_TREE || resultCode != RESULT_OK || !data.isValid())
+        if (requestCode != REQ_OPEN_DOCUMENT_TREE || resultCode != RESULT_OK || !data.isValid()) {
+            if (cb_done)
+                cb_done();
             return;
+        }
 
         const QAndroidJniObject uri = data.callObjectMethod("getData", "()Landroid/net/Uri;");
-        if (!uri.isValid())
+        if (!uri.isValid()) {
+            if (cb_done)
+                cb_done();
             return;
+        }
 
         static constexpr auto REMEMBER_FN = "rememberGrantedPath";
         static constexpr auto REMEMBER_SIGN = "(Landroid/net/Uri;)V";
         QAndroidJniObject::callStaticMethod<void>(jni_classname(), REMEMBER_FN, REMEMBER_SIGN, uri.object());
 
         cb_success();
+        if (cb_done)
+            cb_done();
     };
 
     QAndroidIntent intent(QStringLiteral("android.intent.action.OPEN_DOCUMENT_TREE"));
@@ -107,11 +116,20 @@ bool has_external_storage_access()
     using namespace QtAndroid;
 
 
-    // Android 11
+    // Android 11+ uses SAF: ask the user to grant a directory
+    // instead of requiring the MANAGE_EXTERNAL_STORAGE permission.
     if (androidSdkVersion() >= 30) {
-        static constexpr auto JNI_METHOD = "getAllStorageAccess";
-        const auto has_permission = QAndroidJniObject::callStaticMethod<jboolean>(jni_classname(), JNI_METHOD);
-        if (!has_permission)
+        // Already granted a directory previously
+        if (!granted_paths().isEmpty())
+            return true;
+
+        // Otherwise show the SAF directory picker and wait for the result
+        QEventLoop loop;
+        bool granted = false;
+        request_saf_permission([&granted](){ granted = true; },
+                               [&loop](){ loop.quit(); });
+        loop.exec();
+        if (!granted)
             return false;
     }
 

@@ -29,7 +29,7 @@ QStringList storage_paths();
 bool has_external_storage_access();
 
 QStringList granted_paths();
-void request_saf_permission(const std::function<void()>&);
+void request_saf_permission(const std::function<void()>& cb_success, const std::function<void()>& cb_done = {});
 
 QString run_am_call(const QStringList&);
 QString to_content_uri(const QString&);
